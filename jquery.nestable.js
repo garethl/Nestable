@@ -48,7 +48,8 @@
             maxDepth        : 5,
             threshold       : 20,
             clone           : false,
-            drop            : true
+            drop            : true,
+            sets            : false
         };
 
     function Plugin(element, options)
@@ -375,10 +376,11 @@
                 return;
             }
 
+            var destinationIsSet = $.data($(pointElRoot)[0], 'nestable').options.sets;
             /**
              * move horizontal
              */
-            if (mouse.dirAx && mouse.distAxX >= opt.threshold) {
+            if (!destinationIsSet && mouse.dirAx && mouse.distAxX >= opt.threshold) {
                 // reset move distance on x-axis for new phase
                 mouse.distAxX = 0;
                 prev = this.placeEl.prev(opt.itemNodeName);
@@ -422,7 +424,7 @@
             /**
              * move vertical
              */
-            if (!mouse.dirAx || isNewRoot || isEmpty) {
+            if (opt.sets || !mouse.dirAx || isNewRoot || isEmpty) {
                 // check if groups match if dragging over new root
                 if (isNewRoot && opt.group !== pointElRoot.data('nestable-group')) {
                     return;
@@ -435,7 +437,7 @@
                 var before = e.pageY < (this.pointEl.offset().top + this.pointEl.height() / 2);
                     parent = this.placeEl.parent();
                 // if empty create new list to replace empty placeholder
-                if (isEmpty) {
+                if (isEmpty && !destinationIsSet) {
                     list = $(document.createElement(opt.listNodeName)).addClass(opt.listClass);
                     list.append(this.placeEl);
                     this.pointEl.replaceWith(list);
