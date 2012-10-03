@@ -47,7 +47,8 @@
             group           : 0,
             maxDepth        : 5,
             threshold       : 20,
-            clone           : false
+            clone           : false,
+            drop            : true
         };
 
     function Plugin(element, options)
@@ -69,6 +70,9 @@
             list.el.data('nestable-group', this.options.group);
 
             list.placeEl = $('<div class="' + list.options.placeClass + '"/>');
+            if (!this.options.drop) {
+                $(this.el).addClass("dd-nodrop");
+            }
 
             $.each(this.el.find(list.options.itemNodeName), function(k, el) {
                 list.setParent($(el));
@@ -344,6 +348,33 @@
             }
             mouse.dirAx = newAx;
 
+            var isEmpty = false;
+            // find list item under cursor
+            if (!hasPointerEvents) {
+                this.dragEl[0].style.visibility = 'hidden';
+            }
+            this.pointEl = $(document.elementFromPoint(e.pageX - this.w.scrollLeft(), e.pageY - this.w.scrollTop()));
+            if (!hasPointerEvents) {
+                this.dragEl[0].style.visibility = 'visible';
+            }
+            if (this.pointEl.hasClass(opt.handleClass)) {
+                this.pointEl = this.pointEl.parent(opt.itemNodeName);
+            }
+            if (this.pointEl.hasClass(opt.emptyClass)) {
+                isEmpty = true;
+            }
+            else if (!this.pointEl.length || !this.pointEl.hasClass(opt.itemClass)) {
+                return;
+            }
+            // find parent list of item under cursor
+            var pointElRoot = this.pointEl.parents('.' + opt.rootClass + ':first'),
+                isNewRoot = this.dragRootEl.data('nestable-id') !== pointElRoot.data('nestable-id');
+
+            //if the destination doesn't allow dropping, skip
+            if ($(pointElRoot).hasClass("dd-nodrop")) {
+                return;
+            }
+
             /**
              * move horizontal
              */
@@ -385,29 +416,8 @@
                 }
             }
 
-            var isEmpty = false;
 
-            // find list item under cursor
-            if (!hasPointerEvents) {
-                this.dragEl[0].style.visibility = 'hidden';
-            }
-            this.pointEl = $(document.elementFromPoint(e.pageX - this.w.scrollLeft(), e.pageY - this.w.scrollTop()));
-            if (!hasPointerEvents) {
-                this.dragEl[0].style.visibility = 'visible';
-            }
-            if (this.pointEl.hasClass(opt.handleClass)) {
-                this.pointEl = this.pointEl.parent(opt.itemNodeName);
-            }
-            if (this.pointEl.hasClass(opt.emptyClass)) {
-                isEmpty = true;
-            }
-            else if (!this.pointEl.length || !this.pointEl.hasClass(opt.itemClass)) {
-                return;
-            }
 
-            // find parent list of item under cursor
-            var pointElRoot = this.pointEl.parents('.' + opt.rootClass + ':first'),
-                isNewRoot   = this.dragRootEl.data('nestable-id') !== pointElRoot.data('nestable-id');
 
             /**
              * move vertical
