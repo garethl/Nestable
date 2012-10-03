@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  * Nestable jQuery Plugin - Copyright (c) 2012 David Bushell - http://dbushell.com/
  * Dual-licensed under the BSD or MIT licenses
  */
@@ -46,7 +46,8 @@
             collapseBtnHTML : '<button data-action="collapse" type="button">Collapse</button>',
             group           : 0,
             maxDepth        : 5,
-            threshold       : 20
+            threshold       : 20,
+            clone           : false
         };
 
     function Plugin(element, options)
@@ -257,7 +258,13 @@
 
             this.dragEl = $(document.createElement(this.options.listNodeName)).addClass(this.options.listClass + ' ' + this.options.dragClass);
             this.dragEl.css('width', dragItem.width());
-            dragItem.replaceWith(this.placeEl).appendTo(this.dragEl);
+            
+            if (this.options.clone) {
+                dragItem.clone().appendTo(this.dragEl);
+            } else {
+                dragItem.replaceWith(this.placeEl).appendTo(this.dragEl);
+            }
+
             $(document.body).append(this.dragEl);
             this.dragEl.css({
                 'left' : e.pageX - mouse.offsetX,
