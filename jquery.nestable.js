@@ -141,22 +141,44 @@
             var data,
                 depth = 0,
                 list  = this;
+            
                 step  = function(level, depth)
                 {
-                    var array = [ ],
-                        items = level.children(list.options.itemNodeName);
+                    var array   = [ ],
+                        items   = level.children(list.options.itemNodeName + ".dd-item").not('.hidden');
+                    
                     items.each(function()
                     {
-                        var li   = $(this),
-                            item = $.extend({}, li.data()),
-                            sub  = li.children(list.options.listNodeName);
-                        if (sub.length) {
-                            item.children = step(sub, depth + 1);
+                        var li = $(this);
+                        var item = $.extend({ }, li.data());
+                        
+                        if (list.options.sets) {
+                            var set = [];
+                            var children = li.find(list.options.listNodeName + ":first");
+                            children = children.add(children.siblings('ol'));
+
+                            children.each(function() {
+                                var setchildren = step($(this), depth + 1);
+                                set.push(setchildren);
+                            });
+
+                            if (set.length)
+                                item.children = set;
+
+                        } else {
+                            var sub  = li.children(list.options.listNodeName);
+                       
+                            if (sub.length) {
+                                item.children = step(sub, depth + 1);
+                            }
                         }
+                        
                         array.push(item);
                     });
+                    
                     return array;
                 };
+
             data = step(list.el.find(list.options.listNodeName + ':first'), depth);
             return data;
         },
@@ -288,11 +310,17 @@
 
         dragStop: function(e)
         {
-            this.placeEl.replaceWith(this.dragEl.html());
+            var resultEl = $(this.dragEl.html());
+            
+            this.placeEl.replaceWith(resultEl);
             this.dragEl.remove();
+
             this.el.trigger('change');
             if (this.hasNewRoot) {
                 this.dragRootEl.trigger('change');
+                this.dragRootEl.trigger('drop', [resultEl[0], true]);
+            } else {
+                this.el.trigger('drop', [resultEl[0], false]);
             }
             this.reset();
         },
